@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Clicker Game</title>
+  <style>
+    body {
+      font-family: monospace, monospace;
+      text-align: center;
+      color: #000000;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 50px;
+    }
+    #score {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    .clickable:hover { cursor: pointer; }
+    .notClickable { pointer-events:none }
+    text { pointer-events:none }
+
+    svg {
+      /*cursor: pointer;*/
+      transition: transform 0.1s ease;
+    }
+    /* svg:active {
+      transform: scale(1.05);
+    } */
+	svg text{
+	  -webkit-user-select: none;
+	  -moz-user-select: none;
+	  -ms-user-select: none;
+	  user-select: none;
+    }
+
+  </style>
+</head>
+<body>
+
+  <svg width="1400" height="50">
+    <rect id="mainTab" class="clickable" x="590" y="5" width="100" height="40" fill="#000000" stroke="#FFFFFF" stroke-width="2" rx="5" ry="5"/>
+    <text x="640" y="30" text-anchor="middle" fill="white">Generators</text>
+    <rect id="settingsTab" class="clickable" x="710" y="5" width="100" height="40" fill="#000000" stroke="#FFFFFF" stroke-width="2" rx="5" ry="5"/>
+    <text x="760" y="30" text-anchor="middle" fill="white">Settings</text>
+  </svg>
+  <div id="score">Score: 10.00</div>
+
+  <!-- SVG Button -->
+  <svg width="1400" height="700">
+    <text id="score/s" x="700" y="20" text-anchor="middle" fill="black" font-size="20">0.00/s</text>
+    <text x="700" y="40" text-anchor="middle" fill="black">All generators are stronger based on the amount of it bought ((x+1)^0.25).</text>
+    <!-- <rect id="clickButton" class="clickable" x="205" y="5" width="90" height="90" fill="#4CAF50" stroke="#388E3C" stroke-width="5" rx="5" ry="5"/>
+    <text x="250" y="60" text-anchor="middle" fill="white" font-size="20" font-family="Arial">click this</text> -->
+    <rect id="UpgradeButton1" class="clickable" x="555" y="55" width="300" height="90" fill="#202020" rx="5" ry="5"/>
+    <text id="UpgradeText1.1" x="700" y="70" width="80" height="80" text-anchor="middle" fill="white">Cost: 10.00</text>
+    <text id="UpgradeText1.2" x="700" y="90" width="80" height="80" text-anchor="middle" fill="white">Currently 0.00/s</text>
+    <text id="UpgradeText1.3" x="700" y="110" width="80" height="80" text-anchor="middle" fill="white">0.00 (0.00) 1st generators</text>
+    <rect id="UpgradeButton2" class="clickable" x="555" y="145" width="300" height="90" fill="#202020" rx="5" ry="5"/>
+    <text id="UpgradeText2.1" x="700" y="160" width="80" height="80" text-anchor="middle" fill="white">Cost: 1000</text>
+    <text id="UpgradeText2.2" x="700" y="180" width="80" height="80" text-anchor="middle" fill="white">Currently 0.00/s</text>
+    <text id="UpgradeText2.3" x="700" y="200" width="80" height="80" text-anchor="middle" fill="white">0.00 (0.00) 2st generators</text>
+    <rect id="UpgradeButton3" class="clickable" x="555" y="235" width="300" height="90" fill="#202020" rx="5" ry="5"/>
+    <text id="UpgradeText3.1" x="700" y="250" width="80" height="80" text-anchor="middle" fill="white">Cost: 2.50e5</text>
+    <text id="UpgradeText3.2" x="700" y="270" width="80" height="80" text-anchor="middle" fill="white">Currently 0.00/s</text>
+    <text id="UpgradeText3.3" x="700" y="290" width="80" height="80" text-anchor="middle" fill="white">0.00 (0.00) 3rd generators</text>
+    <rect id="UpgradeButton4" class="clickable" x="555" y="325" width="300" height="90" fill="#202020" rx="5" ry="5"/>
+    <text id="UpgradeText4.1" x="700" y="340" width="80" height="80" text-anchor="middle" fill="white">Cost: 1.00e7</text>
+    <text id="UpgradeText4.2" x="700" y="360" width="80" height="80" text-anchor="middle" fill="white">Currently 0.00/s</text>
+    <text id="UpgradeText4.3" x="700" y="380" width="80" height="80" text-anchor="middle" fill="white">0.00 (0.00) 4th generators</text>
+    <rect id="tickspeedUpgrade" class="clickable" x="255" y="55" width="300" height="90" fill="#202020" rx="5" ry="5"/>
+    <text id="UpgradeText5.1" x="400" y="70" width="80" height="80" text-anchor="middle" fill="white">Cost: 1.00e10</text>
+    <text id="UpgradeText5.2" x="400" y="90" width="80" height="80" text-anchor="middle" fill="white">Tickspeed: 1.00</text>
+    <text id="UpgradeText5.3" x="400" y="110" width="80" height="80" text-anchor="middle" fill="white">Purchased 0.00 times.</text>
+
+  </svg>
+
+  <script>
+    function addLog(a, b) {
+      if(Math.abs(a - b) < 100) return Math.log10(Math.pow(10, Math.max(a, b) - Math.min(a, b)) + 1) + Math.min(a, b);
+      return Math.max(a, b);
+    }
+    function subtractLog(a, b) {
+      if(a < b) return error;
+      if(Math.abs(a - b) < 100) return Math.log10(Math.pow(10, Math.max(a, b) - Math.min(a, b)) - 1) + Math.min(a, b);
+      return Math.max(a, b);
+    }
+    function displayLog(a) {
+      if(a < 2) return ((Math.pow(10, a)).toFixed(2)).toString();
+      if(a < 3) return ((Math.pow(10, a)).toFixed(1)).toString();
+      if(a < 5) return (Math.round(Math.pow(10, a))).toString();
+      if(a < 100000) return ((Math.pow(10, a - Math.floor(a))).toFixed(2)).toString() + "e" + (Math.floor(a)).toString();
+      if(a < 1000000) return ((Math.pow(10, a - Math.floor(a))).toFixed(2)).toString() + "e" + ((a / 100000).toFixed(2)).toString() + "e" + (Math.floor(Math.log10(a))).toString();
+      return "e" + ((a / Math.pow(10, Math.floor(Math.log10(a)))).toFixed(2)).toString() + "e" + (Math.floor(Math.log10(a))).toString();
+    }
+    function factorial(a) {
+      if(a <= 0) return 0;
+      return 0.5 * (Math.log10(2 * Math.PI) + a) + Math.pow(10, a) * (a - Math.log10(2.718281828459045))
+    }
+
+
+    
+    let score = 13;
+    let currentTab = "1"
+    let gameProgress = 0;
+    const scoreDisplay = document.getElementById("score");
+    const tabFromID = [["UpgradeButton1", 1, 0], ["UpgradeText1.1", 1, 0], ["UpgradeText1.2", 1, 0], ["UpgradeText1.3", 1, 0], ["UpgradeButton2", 1, 1], ["UpgradeText2.1", 1, 1], 
+    ["UpgradeText2.2", 1, 1], ["UpgradeText2.3", 1, 1], ["UpgradeButton3", 1, 2], ["UpgradeText3.1", 1, 2], ["UpgradeText3.2", 1, 2], ["UpgradeText3.3", 1, 2],
+    ["UpgradeButton4", 1, 3], ["UpgradeText4.1", 1, 3], ["UpgradeText4.2", 1, 3], ["UpgradeText4.3", 1, 3], ["tickspeedUpgrade", 1, 4], ["UpgradeText5.1", 1, 4],
+    ["UpgradeText5.2", 1, 4], ["UpgradeText5.3", 1, 4]];
+    // const button = document.getElementById("clickButton");
+    for(let i = 0; i < tabFromID.length; i++) {
+        if(tabFromID[i][1] == 1 && gameProgress >= tabFromID[i][2]) document.getElementById(tabFromID[i][0]).setAttribute("opacity", "1");
+        else document.getElementById(tabFromID[i][0]).setAttribute("opacity", "0");
+    }
+    upgrade1Data = {
+      cost: 1,
+      effect1: -999,
+      effect2: 0,
+      level: -99
+    };
+    upgrade2Data = {
+      cost: 3,
+      effect1: -999,
+      effect2: 0,
+      level: -999
+    }
+    upgrade3Data = {
+      cost: Math.log10(250000),
+      effect1: -999,
+      effect2: 0,
+      level: -999
+    }
+    upgrade4Data = {
+      cost: 7,
+      effect1: -999,
+      effect2: 0,
+      level: -999
+    }
+    tickspeedUpgrade = {
+      cost: 10,
+      effect: 0,
+      level: -999
+    }
+    document.getElementById("mainTab").addEventListener("click", () => {
+      currentTab = "1";
+      for(let i = 0; i < tabFromID.length; i++) {
+        if(tabFromID[i][1] == 1 && gameProgress >= tabFromID[i][2]) document.getElementById(tabFromID[i][0]).setAttribute("opacity", "1");
+        else document.getElementById(tabFromID[i][0]).setAttribute("opacity", "0");
+      }
+    })
+    document.getElementById("settingsTab").addEventListener("click", () => {
+      currentTab = "2";
+      for(let i = 0; i < tabFromID.length; i++) {
+        if(tabFromID[i][1] == 2 && gameProgress >= tabFromID[i][2]) document.getElementById(tabFromID[i][0]).setAttribute("opacity", "1");
+        else document.getElementById(tabFromID[i][0]).setAttribute("opacity", "0");
+      }
+    })
+    document.getElementById("UpgradeButton1").addEventListener("click", () => {
+      if(score >= upgrade1Data.cost) {
+        score = subtractLog(score, upgrade1Data.cost);
+        upgrade1Data.level = addLog(upgrade1Data.level, 0);
+        upgrade1Data.cost = Math.log10(1.1) * Math.pow(10, upgrade1Data.level) + 1;
+        upgrade1Data.effect1 = addLog(upgrade1Data.effect1, 0);
+        upgrade1Data.effect2 = 0.25 * addLog(upgrade1Data.level, 0);
+        document.getElementById("UpgradeText1.1").textContent = "Cost: " + displayLog(upgrade1Data.cost);
+        if(gameProgress == 0) gameProgress = 1;
+      };
+    });
+    document.getElementById("UpgradeButton2").addEventListener("click", () => {
+      if(score >= upgrade2Data.cost) {
+        score = subtractLog(score, upgrade2Data.cost);
+        upgrade2Data.level = addLog(upgrade2Data.level, 0);
+        upgrade2Data.cost = Math.log10(1.2) * Math.pow(10, upgrade2Data.level) + 3;
+        upgrade2Data.effect1 = addLog(upgrade2Data.effect1, 0);
+        upgrade2Data.effect2 = 0.25 * addLog(upgrade2Data.level, 0);
+        document.getElementById("UpgradeText2.1").textContent = "Cost: " + displayLog(upgrade2Data.cost);
+        if(gameProgress == 1) gameProgress = 2;
+      };
+    });
+    document.getElementById("UpgradeButton3").addEventListener("click", () => {
+      if(score >= upgrade3Data.cost) {
+        score = subtractLog(score, upgrade3Data.cost);
+        upgrade3Data.level = addLog(upgrade3Data.level, 0);
+        upgrade3Data.cost = Math.log10(1.3) * Math.pow(10, upgrade3Data.level) + Math.log10(250000);
+        upgrade3Data.effect1 = addLog(upgrade3Data.effect1, 0);
+        upgrade3Data.effect2 = 0.25 * addLog(upgrade3Data.level, 0);
+        document.getElementById("UpgradeText3.1").textContent = "Cost: " + displayLog(upgrade3Data.cost);
+        if(gameProgress == 2) gameProgress = 3;
+      };
+    });
+    document.getElementById("UpgradeButton4").addEventListener("click", () => {
+      if(score >= upgrade4Data.cost) {
+        score = subtractLog(score, upgrade4Data.cost);
+        upgrade4Data.level = addLog(upgrade4Data.level, 0);
+        upgrade4Data.cost = Math.log10(1.4) * Math.pow(10, upgrade4Data.level) + 7;
+        upgrade4Data.effect1 = addLog(upgrade4Data.effect1, 0);
+        upgrade4Data.effect2 = 0.25 * addLog(upgrade4Data.level, 0);
+        document.getElementById("UpgradeText4.1").textContent = "Cost: " + displayLog(upgrade4Data.cost);
+        if(gameProgress == 3) gameProgress = 4;
+      };
+    });
+    document.getElementById("tickspeedUpgrade").addEventListener("click", () => {
+      if(score >= tickspeedUpgrade.cost) {
+        score = subtractLog(score, tickspeedUpgrade.cost);
+        tickspeedUpgrade.level = addLog(tickspeedUpgrade.level, 0);
+        tickspeedUpgrade.cost = 10 * Math.pow(1.05, Math.pow(10, tickspeedUpgrade.level));
+        tickspeedUpgrade.effect = Math.log10(1.5) * Math.pow(10, tickspeedUpgrade.level);
+        document.getElementById("UpgradeText5.1").textContent = "Cost: " + displayLog(tickspeedUpgrade.cost);
+        document.getElementById("UpgradeText5.2").textContent = "Tickspeed: " + displayLog(tickspeedUpgrade.effect);
+        if(gameProgress == 4) gameProgress = 5;
+      };
+    });
+    function update() {
+      score = addLog(score, upgrade1Data.effect1 - Math.log10(50) + upgrade1Data.effect2 + tickspeedUpgrade.effect);
+      upgrade1Data.effect1 = addLog(upgrade1Data.effect1, upgrade2Data.effect1 - Math.log10(50) + upgrade2Data.effect2 + tickspeedUpgrade.effect);
+      upgrade2Data.effect1 = addLog(upgrade2Data.effect1, upgrade3Data.effect1 - Math.log10(50) + upgrade3Data.effect2 + tickspeedUpgrade.effect);
+      upgrade3Data.effect1 = addLog(upgrade3Data.effect1, upgrade4Data.effect1 - Math.log10(50) + upgrade4Data.effect2 + tickspeedUpgrade.effect);
+      scoreDisplay.textContent = "Score: " + displayLog(score);
+      document.getElementById("score/s").textContent = displayLog(upgrade1Data.effect1 + upgrade1Data.effect2 + tickspeedUpgrade.effect) + "/s";
+      document.getElementById("UpgradeText1.3").textContent = displayLog(upgrade1Data.effect1) + " (" + displayLog(upgrade1Data.level) + ") 1st generators";
+      document.getElementById("UpgradeText2.3").textContent = displayLog(upgrade2Data.effect1) + " (" + displayLog(upgrade2Data.level) + ") 2nd generators";
+      document.getElementById("UpgradeText3.3").textContent = displayLog(upgrade3Data.effect1) + " (" + displayLog(upgrade3Data.level) + ") 3rd generators";
+      document.getElementById("UpgradeText4.3").textContent = displayLog(upgrade4Data.effect1) + " (" + displayLog(upgrade4Data.level) + ") 4th generators";
+      document.getElementById("UpgradeText5.3").textContent = "Purchased " +displayLog(tickspeedUpgrade.level) + " times.";
+      document.getElementById("UpgradeText1.2").textContent = "Currently " + displayLog(upgrade2Data.effect1 + upgrade2Data.effect2 + tickspeedUpgrade.effect) + "/s";
+      document.getElementById("UpgradeText2.2").textContent = "Currently " + displayLog(upgrade3Data.effect1 + upgrade3Data.effect2 + tickspeedUpgrade.effect) + "/s";
+      document.getElementById("UpgradeText3.2").textContent = "Currently " + displayLog(upgrade4Data.effect1 + upgrade4Data.effect2 + tickspeedUpgrade.effect) + "/s";
+      if(score >= upgrade1Data.cost) {
+        document.getElementById("UpgradeButton1").setAttribute("fill", "#404040")
+      } else {
+        document.getElementById("UpgradeButton1").setAttribute("fill", "#202020")
+      }
+      if(score >= upgrade2Data.cost) {
+        document.getElementById("UpgradeButton2").setAttribute("fill", "#404040")
+      } else {
+        document.getElementById("UpgradeButton2").setAttribute("fill", "#202020")
+      }
+      if(score >= upgrade3Data.cost) {
+        document.getElementById("UpgradeButton3").setAttribute("fill", "#404040")
+      } else {
+        document.getElementById("UpgradeButton3").setAttribute("fill", "#202020")
+      }
+      if(score >= upgrade4Data.cost) {
+        document.getElementById("UpgradeButton4").setAttribute("fill", "#404040")
+      } else {
+        document.getElementById("UpgradeButton4").setAttribute("fill", "#202020")
+      }
+      if(score >= tickspeedUpgrade.cost) {
+        document.getElementById("tickspeedUpgrade").setAttribute("fill", "#404040")
+      } else {
+        document.getElementById("tickspeedUpgrade").setAttribute("fill", "#202020")
+      }
+      for(let i = 0; i < tabFromID.length; i++) {
+        if(tabFromID[i][1] == currentTab && gameProgress >= tabFromID[i][2]) document.getElementById(tabFromID[i][0]).setAttribute("opacity", "1");
+        else document.getElementById(tabFromID[i][0]).setAttribute("opacity", "0");
+      }
+    }
+    setInterval(update, 20)
+</script>
+
+</body>
+</html>
