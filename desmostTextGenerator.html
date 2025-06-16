@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Desmos Text Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input[type="text"] {
+      width: 300px;
+      font-size: 16px;
+      padding: 8px;
+    }
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+      white-space: pre-wrap; /* preserves line breaks */
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Enter text here:</h2>
+  <input type="text" id="inputBox" placeholder="Start typing...">
+  <div id="output"></div>
+
+  <script>
+    // Mapping from each letter to an array of letters (one per output line)
+    const letterMap = {
+    //  a: [String.raw`y=-2\left|x-1-$OFFSET$\right|+2\left\{y>0\right\}`, String.raw`y=1\left\{\left|x-1-$OFFSET$\right|<0.5\right\}`],
+       "{": [String.raw`\left(2\left(x-1-$OFFSET$\right)\right)^{2}+\left(y-1\right)^{2}=1\left\{x<1+$OFFSET$\right\}\left\{\left|y-1\right|>0.25\right\}`, String.raw`x-$OFFSET$-0.2659=\left|y-1\right|\left\{\left|y-1\right|<0.25\right\}`],
+       "}": [String.raw`\left(2\left(x-1-$OFFSET$\right)\right)^{2}+\left(y-1\right)^{2}=1\left\{x>1+$OFFSET$\right\}\left\{\left|y-1\right|>0.25\right\}`, String.raw`x-$OFFSET$-1.73412=-\left|y-1\right|\left\{\left|y-1\right|<0.25\right\}`],
+       "+": [String.raw`y=\left[0,99\right]\left(x-1-$OFFSET$\right)+1\left\{\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}<1\right\}`],
+       "=": [String.raw`\left|y-1\right|=0.5\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       ">": [String.raw`x=$OFFSET$+2-2\left|y-1\right|\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "<": [String.raw`x=$OFFSET$+2\left|y-1\right|\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "/": [String.raw`y=2\left(x-0.5-$OFFSET$\right)\left\{\left|y-1\right|<1\right\}`],
+       "\\": [String.raw`y=-2\left(x-1.5-$OFFSET$\right)\left\{\left|y-1\right|<1\right\}`],
+       "-": [String.raw`y=1\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "|": [String.raw`x=1+$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "]": [String.raw`\left|y-1\right|=1\left\{\left|x-1-$OFFSET$\right|<0.5\right\}`, String.raw`x=1.5+$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "[": [String.raw`\left|y-1\right|=1\left\{\left|x-1-$OFFSET$\right|<0.5\right\}`, String.raw`x=0.5+$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "-": [String.raw`y=1\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "1": [String.raw`y=0\left\{\left|x-1-$OFFSET$\right|<1\right\}`, String.raw`x=1+$OFFSET$\left\{\left|y-1\right|<1\right\}`, String.raw`y=x+1-$OFFSET$\left\{\left|y-1.5\right|<0.5\right\}`],
+       "2": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1.4\right)^{2}=0.36\left\{y>1.4\right\}`, String.raw`y=\frac{7}{6}\left(x-0.4-$OFFSET$\right)\left\{\left|y-0.7\right|<0.7\right\}`, String.raw`y=0\left\{\left|x-1-$OFFSET$\right|<0.6\right\}`],
+       "3": [String.raw`y=2\left\{\left|x-1-$OFFSET$\right|<0.5\right\}`, String.raw`y=x+0.5-$OFFSET$\left\{\left|y-1.5\right|<0.5\right\}`, String.raw`\left(\frac{\left(x-0.5-$OFFSET$\right)}{2}\right)^{2}+\left(y-0.5\right)^{2}=0.25\left\{x>0.5+$OFFSET$\right\}`],
+       "4": [String.raw`\max\left(\left|x-1-$OFFSET$\right|,\left|y-1.5\right|\right)=0.5\left\{y<1.99\right\}`, String.raw`x=1.5+$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "5": [String.raw`\max\left(\left|x-1-$OFFSET$\right|,\left|y-1.5\right|\right)=0.5\left\{x<1.49+$OFFSET$\right\}\left\{y>1\right\}`, String.raw`\left(\frac{\left(x-0.5-$OFFSET$\right)}{2}\right)^{2}+\left(y-0.5\right)^{2}=0.25\left\{x>0.5+$OFFSET$\right\}`],
+       "6": [String.raw`\max\left(\left|x-1-$OFFSET$\right|,\left|\left|y-1\right|-0.51\right|\right)=0.5\left\{x<1.49+$OFFSET$,y<1\right\}`],
+       "7": [String.raw`y=2\left\{\left|x-1-$OFFSET$\right|<0.5\right\}`, String.raw`y=2\left(x-0.5-$OFFSET$\right)\left\{\left|y-1\right|<1\right\}`],
+       "8": [String.raw`\max\left(\left|x-1-$OFFSET$\right|,\left|\left|y-1\right|-0.51\right|\right)=0.5`],
+       "9": [String.raw`\max\left(\left|x-1-$OFFSET$\right|,\left|\left|y-1\right|-0.51\right|\right)=0.5\left\{x>0.5+$OFFSET$,y>1\right\}`],
+       "0": [String.raw`\left(2\left(x-1-$OFFSET$\right)\right)^{2}+\left(y-1\right)^{2}=1`],
+       "'": [String.raw`x=1+$OFFSET$\left\{\left|y-1.75\right|<0.25\right\}`],
+       ")": [String.raw`\left(2\left(x-1-$OFFSET$\right)\right)^{2}+\left(y-1\right)^{2}=1\left\{x>1+$OFFSET$\right\}`],
+       "(": [String.raw`\left(2\left(x-1-$OFFSET$\right)\right)^{2}+\left(y-1\right)^{2}=1\left\{x<1+$OFFSET$\right\}`],
+       "?": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-0.25\right)^{2}=0.0625`, String.raw`x=1+$OFFSET$\left\{\left|y-0.75\right|<0.125\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1.4375\right)^{2}=0.5625^{2}\left\{x>1+$OFFSET$,y>1.4375\right\}`],
+       "!": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-0.25\right)^{2}=0.0625`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(\left|y-1.25\right|-0.4\right)^{2}=0.0625\left\{\left|y-1.25\right|>0.4\right\}`, String.raw`\left|x-1-$OFFSET$\right|=0.25\left\{\left|y-1.25\right|<0.4\right\}`],
+       ",": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-0.25\right)^{2}=0.0625`, String.raw`\left(x-0.75-$OFFSET$\right)^{2}+\left(y\right)^{2}=0.25\left\{x>1+$OFFSET$\right\}\left\{y<0.14714\right\}`, String.raw`\left(x-0.62-$OFFSET$\right)^{2}+\left(y+0.1\right)^{2}=0.25\left\{x>1+$OFFSET$\right\}\left\{y<0.0229\right\}`],
+       ".": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-0.25\right)^{2}=0.0625`],
+       " ": [""],
+       "a": [String.raw`y=-2\left|x-1-$OFFSET$\right|+2\left\{y>0\right\}`, String.raw`y=1\left\{\left|x-1-$OFFSET$\right|<0.5\right\}`],
+       "b": [String.raw`x=$OFFSET$\left\{\left|y-1\right|<1\right\}`, String.raw`\operatorname{mod}\left(y,1\right)=0.01\left\{\left|x-0.5-$OFFSET$\right|<0.5\right\}\left\{\left|y-1\right|<1.5\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(\left|y-1\right|-0.5\right)^{2}=0.25\left\{x>1+$OFFSET$\right\}`],
+       "c": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}=1\left\{x<1.7+$OFFSET$\right\}`],
+       "d": [String.raw`\max\left(\left|x-1-$OFFSET$\right|,\left|y-1\right|\right)=1\left\{x<1+$OFFSET$\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}=1\left\{x>1+$OFFSET$\right\}`],
+       "e": [String.raw`\max\left(\left|\frac{x-1-$OFFSET$}{2}\right|,\left|y-1.5\right|\right)=0.5\left\{x<1.9+$OFFSET$\right\}`, String.raw`\max\left(\left|\frac{x-1-$OFFSET$}{2}\right|,\left|y-0.5\right|\right)=0.5\left\{x<1.9+$OFFSET$\right\}`],
+       "f": [String.raw`x=$OFFSET$\left\{\left|y-1\right|<1\right\}`, String.raw`\left|y-1.5\right|=0.5\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "g": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}=1\left\{x<1.6+$OFFSET$\right\}`, String.raw`x=1.6+$OFFSET$\left\{y>1-\sin\left(\arccos\left(0.6\right)\right)\right\}\left\{y<1\right\}`, String.raw`y=1\left\{\left|x-1.3-$OFFSET$\right|<0.3\right\}`],
+       "h": [String.raw`\left|x-1-$OFFSET$\right|=1\left\{\left|y-1\right|<1\right\}`, String.raw`y=1\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "i": [String.raw`\left|y-1\right|=1\left\{\left|x-1-$OFFSET$\right|<1\right\}`, String.raw`x=1+$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "j": [String.raw`x=1.75+$OFFSET$\left\{\left|y-1.365\right|<0.625\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-0.75\right)^{2}=\frac{9}{16}\left\{y<0.75\right\}`],
+       "k": [String.raw`x=$OFFSET$\left\{\left|y-1\right|<1\right\}`, String.raw`2\left|y-1\right|=x-$OFFSET$\left\{x<2+$OFFSET$\right\}`],
+       "l": [String.raw`y=0\left\{\left|x-1-$OFFSET$\right|<1\right\}`, String.raw`x=$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "m": [String.raw`\left|x-1-$OFFSET$\right|=1\left\{\left|y-1\right|<1\right\}`, String.raw`y=2\left|x-1-$OFFSET$\right|\left\{y<2\right\}`],
+       "n": [String.raw`\left|x-1-$OFFSET$\right|=1\left\{\left|y-1\right|<1\right\}`, String.raw`y=-x+2+$OFFSET$\left\{\left|x-1-$OFFSET$\right|<1\right\}`],
+       "o": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}=1`],
+       "p": [String.raw`x=$OFFSET$\left\{\left|y-1\right|<1\right\}`, String.raw`\left|y-1.5\right|=0.5\left\{\left|x-0.5-$OFFSET$\right|<0.5\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1.5\right)^{2}=0.25\left\{x>1+$OFFSET$\right\}`],
+       "q": [String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}=1`, String.raw`y=-x+2+$OFFSET$\left\{\left|x-1.75-$OFFSET$\right|<0.25\right\}`],
+       "r": [String.raw`x=$OFFSET$\left\{\left|y-1\right|<1\right\}`, String.raw`\left|y-1.5\right|=0.5\left\{\left|x-0.5-$OFFSET$\right|<0.5\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1.5\right)^{2}=0.25\left\{x>1+$OFFSET$\right\}`, String.raw`y=-x+2+$OFFSET$\left\{\left|x-1.5-$OFFSET$\right|<0.5\right\}`],
+       "s": [String.raw`\left(\frac{\left(x-1-$OFFSET$\right)}{2}\right)^{2}+\left(\left|y-1\right|-0.5\right)^{2}=0.25\left\{\left|y-1\right|>0.2\right\}`, String.raw`y=-0.25\left(x-$OFFSET$\right)+1.25\left\{\left|y-1\right|<0.2\right\}`],
+       "t": [String.raw`y=2\left\{\left|x-1-$OFFSET$\right|<1\right\}`, String.raw`x=1+$OFFSET$\left\{\left|y-1\right|<1\right\}`],
+       "u": [String.raw`\left|x-1-$OFFSET$\right|=1\left\{\left|y-1.5\right|<0.5\right\}`, String.raw`\left(x-1-$OFFSET$\right)^{2}+\left(y-1\right)^{2}=1\left\{y<1\right\}`],
+       "v": [String.raw`y=2\left|x-1-$OFFSET$\right|\left\{y<2\right\}`],
+       "w": [String.raw`y=3\left|\left|x-1-$OFFSET$\right|-\frac{1}{3}\right|\left\{y<2\right\}`],
+       "x": [String.raw`\left|x-1-$OFFSET$\right|=\left|y-1\right|\left\{\left|y-1\right|<1\right\}`],
+       "y": [String.raw`x=1+$OFFSET$\left\{\left|y-0.5\right|<0.5\right\}`, String.raw`y=\left|x-1-$OFFSET$\right|+1\left\{y<2\right\}`],
+       "z": [String.raw`\left|y-1\right|=1\left\{\left|x-1-$OFFSET$\right|<1\right\}`, String.raw`y=x-$OFFSET$\left\{\left|y-1\right|<1\right\}`]
+    };
+
+    const inputBox = document.getElementById('inputBox');
+    const output = document.getElementById('output');
+
+    inputBox.addEventListener('input', () => {
+      const inputText = inputBox.value;
+      let resultLines = [];
+
+      let letterCount = 0;
+      for (let char of inputText) {
+        letterCount += 1;
+        const lowerChar = char.toLowerCase();
+        if (letterMap[lowerChar])
+        {
+            let lettersWithOffset = [];
+            for (let i = 0; i < letterMap[lowerChar].length; i++)
+            {
+              //letterMap[lowerChar][i] = letterMap[lowerChar][i].replace(/\$OFFSET\$/g, letterCount * 2.5);
+              lettersWithOffset[i] = letterMap[lowerChar][i].replace(/\$OFFSET\$/g, letterCount * 2.5);
+            }
+            //resultLines.push(...letterMap[lowerChar]);
+            resultLines.push(...lettersWithOffset);
+        }
+        else
+        {
+          resultLines.push(char); // output as-is if not mapped
+        }
+      }
+
+      output.textContent = resultLines.join('\n');
+    });
+  </script>
+
+</body>
+</html>
